@@ -25,6 +25,10 @@ class _GamePageState extends State<GamePage> {
 
   void generateNewFood() {
     food = randomNumer.nextInt(20 * 30);
+
+    if (_snakePiecePositions.contains(food)) {
+      generateNewFood();
+    }
   }
 
   void startGame() {
