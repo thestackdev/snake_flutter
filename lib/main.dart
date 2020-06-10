@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:snake_game/game.dart';
 
 void main() {
@@ -8,6 +9,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIOverlays([]);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Snake Game',

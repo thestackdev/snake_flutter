@@ -10,34 +10,25 @@ class GamePage extends StatefulWidget {
   _GamePageState createState() => _GamePageState();
 }
 
-enum GameState { SPLASH, RUNNING, SUCCESS, FAILURE }
 enum Directions { UP, DOWN, LEFT, RIGHT }
 
 class _GamePageState extends State<GamePage> {
-  static List _snakePiecePositions = [45, 63, 81, 99];
-  Directions _directions = Directions.DOWN;
-  bool isRunning = false;
-  bool isStarted = true;
-  static var randomNumer = Random();
-  var food = randomNumer.nextInt(500);
-  int score = 0;
-  int speed = 300;
-  var duration = Duration(milliseconds: 300);
+  static List _snakePiecePositions;
+  List _snakeBody;
+  Directions _directions;
+  bool isRunning;
+  bool isStarted;
+  var randomNumer = Random();
+  var food;
+  int score;
+  Duration duration = Duration(milliseconds: (250));
 
   void generateNewFood() {
-    if (score % 2 == 0) {
-      print('object');
-      setState(() {
-        duration = Duration(milliseconds: speed + 100);
-      });
-    }
-    food = randomNumer.nextInt(500);
+    food = randomNumer.nextInt(20 * 30);
   }
 
   void startGame() {
-    isRunning = true;
-    isStarted = false;
-
+    print(duration);
     Timer.periodic(duration, (timer) {
       if (isRunning) {
         updateSnake();
@@ -51,34 +42,30 @@ class _GamePageState extends State<GamePage> {
     setState(() {
       switch (_directions) {
         case Directions.DOWN:
-          if ((_snakePiecePositions.last +
-                  _snakePiecePositions.last % 18 +
-                  30) >
-              540) {
+          if ((_snakePiecePositions.last + _snakePiecePositions.last % 20) >
+              20 * 30 - 1) {
             endgame();
           } else {
-            _snakePiecePositions.add(_snakePiecePositions.last + 18);
+            _snakePiecePositions.add(_snakePiecePositions.last + 20);
           }
           break;
         case Directions.UP:
-          if ((_snakePiecePositions.last +
-                  _snakePiecePositions.last % 18 -
-                  30) <
+          if ((_snakePiecePositions.last + _snakePiecePositions.last % 20) <
               0) {
             endgame();
           } else {
-            _snakePiecePositions.add(_snakePiecePositions.last - 18);
+            _snakePiecePositions.add(_snakePiecePositions.last - 20);
           }
           break;
         case Directions.RIGHT:
-          if (_snakePiecePositions.last % 18 == 17) {
+          if (_snakePiecePositions.last % 20 == 19) {
             endgame();
           } else {
             _snakePiecePositions.add(_snakePiecePositions.last + 1);
           }
           break;
         case Directions.LEFT:
-          if (_snakePiecePositions.last % 18 == 0) {
+          if (_snakePiecePositions.last % 20 == 0) {
             endgame();
           } else {
             _snakePiecePositions.add(_snakePiecePositions.last - 1);
@@ -90,6 +77,8 @@ class _GamePageState extends State<GamePage> {
       if (_snakePiecePositions.last == food) {
         ++score;
         generateNewFood();
+      } else if (checkForBodyBite()) {
+        endgame();
       } else {
         _snakePiecePositions.removeAt(0);
       }
@@ -97,56 +86,73 @@ class _GamePageState extends State<GamePage> {
   }
 
   @override
+  void initState() {
+    initGame();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.width * 1.8,
-              child: GestureDetector(
-                onVerticalDragUpdate: (details) {
-                  if (_directions != Directions.UP && details.delta.dy > 0) {
-                    setState(() {
-                      _directions = Directions.DOWN;
-                    });
-                  } else if (_directions != Directions.DOWN &&
-                      details.delta.dy < 0) {
-                    setState(() {
-                      _directions = Directions.UP;
-                    });
-                  }
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (_directions != Directions.LEFT && details.delta.dx > 0) {
-                    setState(() {
-                      _directions = Directions.RIGHT;
-                    });
-                  } else if (_directions != Directions.RIGHT &&
-                      details.delta.dx < 0) {
-                    setState(() {
-                      _directions = Directions.LEFT;
-                    });
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: GestureDetector(
+              onVerticalDragUpdate: (details) {
+                if (_directions != Directions.UP && details.delta.dy > 0) {
+                  setState(() {
+                    _directions = Directions.DOWN;
+                  });
+                } else if (_directions != Directions.DOWN &&
+                    details.delta.dy < 0) {
+                  setState(() {
+                    _directions = Directions.UP;
+                  });
+                }
+              },
+              onHorizontalDragUpdate: (details) {
+                if (_directions != Directions.LEFT && details.delta.dx > 0) {
+                  setState(() {
+                    _directions = Directions.RIGHT;
+                  });
+                } else if (_directions != Directions.RIGHT &&
+                    details.delta.dx < 0) {
+                  setState(() {
+                    _directions = Directions.LEFT;
+                  });
+                }
+              },
+              behavior: HitTestBehavior.opaque,
+              child: AspectRatio(
+                aspectRatio: 20 / (30 + 2),
                 child: GridView.builder(
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: 540,
+                    itemCount: 20 * 30,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 18,
+                      crossAxisCount: 20,
                     ),
                     itemBuilder: (BuildContext context, int index) {
-                      if (_snakePiecePositions.contains(index)) {
+                      if (index == _snakePiecePositions.last) {
                         return Center(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(30),
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(30),
-                                color: Colors.deepOrangeAccent[400],
+                                color: Colors.deepOrangeAccent[700],
+                              ),
+                            ),
+                          ),
+                        );
+                      } else if (_snakePiecePositions.contains(index)) {
+                        return Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                color: Colors.deepOrangeAccent[100],
                               ),
                             ),
                           ),
@@ -163,7 +169,7 @@ class _GamePageState extends State<GamePage> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(30),
-                              color: Colors.purple[100],
+                              color: Colors.white.withOpacity(0.1),
                             ),
                           ),
                         );
@@ -171,80 +177,72 @@ class _GamePageState extends State<GamePage> {
                     }),
               ),
             ),
-            Container(
-              alignment: Alignment.center,
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30)),
-                  color: Colors.white),
-              child: isStarted
-                  ? GestureDetector(
-                      onTap: () {
-                        startGame();
-                      },
-                      child: Text(
-                        'Start Game',
-                        style: TextStyle(
-                            color: Colors.deepOrangeAccent,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        GestureDetector(
-                          onTap: () {
-                            resetGame();
-                          },
-                          child: Text(
-                            isRunning ? ' Score $score' : 'Reset Game',
-                            style: TextStyle(
-                                color: Colors.deepOrangeAccent,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            if (isRunning) {
-                              setState(() {
-                                isRunning = false;
-                              });
-                            } else {
-                              setState(() {
-                                startGame();
-                                isRunning = true;
-                              });
-                            }
-                          },
-                          child: Text(
-                            !isRunning ? 'Resume' : 'Pause',
-                            style: TextStyle(
-                                color: Colors.deepOrangeAccent,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        )
-                      ],
+          ),
+          Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30)),
+                color: Colors.white),
+            child: isStarted
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isStarted = false;
+                        isRunning = true;
+                      });
+                      startGame();
+                    },
+                    child: Text(
+                      'Start Game',
+                      style: TextStyle(
+                          color: Colors.deepOrangeAccent,
+                          fontSize: 23,
+                          fontWeight: FontWeight.bold),
                     ),
-            )
-          ],
-        ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            initGame();
+                          });
+                        },
+                        child: Text(
+                          isRunning ? ' Score $score' : 'Reset Game',
+                          style: TextStyle(
+                              color: Colors.deepOrangeAccent,
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isRunning = !isRunning;
+                            if (isRunning) {
+                              startGame();
+                            }
+                          });
+                        },
+                        child: Text(
+                          !isRunning ? 'Resume' : 'Pause',
+                          style: TextStyle(
+                              color: Colors.deepOrangeAccent,
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    ],
+                  ),
+          )
+        ],
       ),
     );
-  }
-
-  void resetGame() {
-    setState(() {
-      isStarted = true;
-      _snakePiecePositions = [45, 63, 81, 99];
-      _directions = Directions.DOWN;
-      isRunning = false;
-      score = 0;
-    });
   }
 
   void endgame() {
@@ -269,8 +267,10 @@ class _GamePageState extends State<GamePage> {
             actions: <Widget>[
               CupertinoDialogAction(
                 onPressed: () {
-                  resetGame();
-                  Navigator.pop(context);
+                  setState(() {
+                    initGame();
+                    Navigator.pop(context);
+                  });
                 },
                 child: Text(
                   'Play Again',
@@ -294,8 +294,26 @@ class _GamePageState extends State<GamePage> {
               )
             ],
           ));
-      print('done');
       isRunning = false;
     });
+  }
+
+  void initGame() {
+    _snakePiecePositions = [45, 65, 85];
+    _directions = Directions.DOWN;
+    isRunning = false;
+    isStarted = true;
+    generateNewFood();
+    score = 0;
+  }
+
+  bool checkForBodyBite() {
+    _snakeBody = _snakePiecePositions.toList();
+    _snakeBody.remove(_snakePiecePositions.last);
+
+    if (_snakeBody.contains(_snakePiecePositions.last)) {
+      return true;
+    } else
+      return false;
   }
 }
